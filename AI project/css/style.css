@@ -1,0 +1,15 @@
+body {
+    background-color: #111111;
+    font-family: sans-serif;
+}
+
+#canv {
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    margin: auto;
+    background-color: #fff;
+}
