@@ -1,12 +1,7 @@
-/**
- * Сделать:
- * 1. ф-ию калькуляции по изменеию на странице
- * 2. написать комменты
- */
 //Current date
 
 let date = document.querySelector('.budget__title--month');
-let current_date = new Date;
+let current_date = new Date; // создает новую дату
 let month = [
 	"January",
 	"February",
@@ -20,7 +15,7 @@ let month = [
 	"October",
 	"November",
 	"December"
-];
+];//getMonth возвращает номер месяца, поэтому создаем массив с названиями месяцов для вывода на станицу
 
 date.innerHTML = `${month[current_date.getMonth()]} ${current_date.getFullYear() }`;
 
@@ -54,28 +49,20 @@ button.addEventListener('click', (e) => {
 incomeTable.addEventListener('click', (e) => {
 	if (e.target.classList.contains('item__delete--btn')) {
 		const id = e.target.closest('.item').id;
-		const value = e.target.closest('.item').value;
-		storage.income_sum -= value;
-		if (isNaN(storage.income_sum)) storage.income_sum = 0; 
-		storage.summary -= value;
 		delete_point_balance(id);
-		sumCalculationHTML();
 	}
 });
 
 expenseTable.addEventListener('click', (e) => {
 	if (e.target.classList.contains('item__delete--btn')) {
 		const id = e.target.closest('.item').id;
-		const value = e.target.closest('.item').value;
-		storage.expense_sum -= value;
-		if (storage.expense_sum.isNaN()) storage.expense_sum = 0; 
-		storage.summary += value;
 		delete_point_balance(id);
-		sumCalculationHTML();
 	}
 });
 
-
+/**
+ * Генерация id
+ */
 const generate_id = () => {
     const chars = '123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCCVBNM';
     let id = '';
@@ -83,6 +70,12 @@ const generate_id = () => {
     return id;
 }
 
+/**
+ * Добавление позиции по расходу\доходу в общий массив
+ * @param {string} description - описание
+ * @param {number} value - сумма
+ * @param {string} act - расход\ доход
+ */
 const add_point_balance = (description, value, act) => {
 	if (!description) return alert('Введите описание изменения');
     if (!value) return alert('Введите значение');
@@ -90,12 +83,16 @@ const add_point_balance = (description, value, act) => {
 	const new_point = {description, value, act, id: generate_id()};
 	
 	storage.point_balance.push(new_point);
+	sumCalculation();
 	add_point_balance_template(new_point);
-	sumCalculation(new_point);
 	return storage.point_balance.slice();
     
 }
 
+/**
+ * добавление позиции в разметку таблицы
+ * @param {*} new_point 
+ */
 const add_point_balance_template = new_point => {
 	const income_template = create_income_point_template(new_point);
 	const expense_template = create_expense_point_template(new_point);
@@ -106,6 +103,10 @@ const add_point_balance_template = new_point => {
 	}
 }
 
+/**
+ * HTML для позиции расхода\дохода
+ * @param {*} new_point 
+ */
 const create_income_point_template = new_point => {
 	return `
 		<div class="item clearfix" id='${new_point.id}'>
@@ -134,6 +135,10 @@ const create_expense_point_template = new_point => {
 	`;
 }
 
+/**
+ * удаление позиции по id
+ * @param {string} id - id указанной позиции
+ */
 const delete_point_balance = id => {
 	if (!id) console.log('Передайте id');
 
@@ -146,35 +151,46 @@ const delete_point_balance = id => {
 
 	storage.point_balance = storage.point_balance.filter(point => point.id !== id);
 
+	sumCalculation();
+
 	delete_point_from_html(id);
 
 	return storage.point_balance;
 }
 
+/**
+ * удаление позиции из разметки
+ * @param {string} id 
+ */
 const delete_point_from_html = id => {
 	const deleteElement = document.getElementById(id);
 	const deleteElementParent = deleteElement.parentElement;
 	deleteElementParent.removeChild(deleteElement);
 }
 
-
-const sumCalculation = new_point => {
-	if (new_point.act === 'income') {
-		storage.income_sum += new_point.value;
-	} else {
-		storage.expense_sum += new_point.value;
+/**
+ * калькулирование расхода\дохода
+ */
+const sumCalculation = () => {
+	storage.income_sum = 0;
+	storage.expense_sum = 0;
+	storage.summary = 0;
+	for (let i = 0; i < storage.point_balance.length; i++) {
+		if (storage.point_balance[i].act === 'income') {
+			storage.income_sum += storage.point_balance[i].value;
+		} else {
+			storage.expense_sum += storage.point_balance[i].value;
+		}
 	}
-
 	storage.summary = storage.income_sum - storage.expense_sum;
-
+	
 	sumCalculationHTML();
 }
 
+/**
+ * вставка калькуляций на станицу
+ */
 const sumCalculationHTML = () => {
-	if (!storage.summary) {
-		document.querySelector('.budget__value').insertAdjacentHTML('afterbegin', `<span>-</span>`);
-	} else document.querySelector('.budget__value').insertAdjacentHTML('afterbegin', `<span>+</span>`);
-
 	document.querySelector('.budget__value').innerHTML = `${storage.summary}`;
 	document.querySelector('.budget__income--value').innerHTML = `${storage.income_sum}`;
 	document.querySelector('.budget__expenses--value').innerHTML = `${storage.expense_sum}`;

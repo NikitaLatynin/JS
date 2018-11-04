@@ -26,9 +26,16 @@ const input_text = form['text'];
 form.addEventListener('submit', (e) => {
     e.preventDefault();
     if (!input_title.value || !input_text.value) return alert_message('Заполните все поля!', 'alert-danger');
-    add_new_todo(input_title.value, input_text.value);
-    form.reset();
-    input_text.disabled = true;
+
+    if (storage.current_edit_task.id) {
+        //edit
+        edit_todo_item(storage.current_edit_task.id, input_title.value, input_text.value);
+        reset_edit_todo(storage.current_edit_task.id);
+    } else {
+        add_new_todo(input_title.value, input_text.value);
+        form.reset();
+        input_text.disabled = true;
+    }
 });
 
 input_title.addEventListener('keyup', (e) => {
@@ -44,6 +51,11 @@ table.addEventListener('click', (e) => {
     if (e.target.classList.contains('edit-task')) {
         const id = e.target.closest('tr').dataset.todoId;
         set_to_edit_todo(id);
+    }
+
+    if (e.target.classList.contains('cancel-edit')) {
+        const id = e.target.closest('tr').dataset.todoId;
+        reset_edit_todo(id);
     }
 });
 
@@ -97,11 +109,12 @@ const add_new_item_template = todo => {
 const create_todo_template = (todo) => {
     return `
         <tr data-todo-id ="${todo.id}">
-            <td>${todo.title}</td>
-            <td>${todo.text}</td>
+            <td class="todo-title">${todo.title}</td>
+            <td class="todo-text">${todo.text}</td>
             <td>
                 <i class="fas fa-trash-alt mr-1 remove-task"></i>
                 <i class="far fa-edit mr-1 edit-task"></i>
+                <i class="fas fa-times cancel-edit d-none"></i>
             </td> 
         </tr>
     `;
@@ -184,7 +197,18 @@ const edit_todo_item = (id, title, text) => {
         } else console.log('Неверный id.');
     });
 
+    edit_todo_template(id, title, text);
+
     return storage.current_todos;
+}
+
+const edit_todo_template = (id, title, text) => {
+    const tr = document.querySelector(`tr[data-todo-id="${id}"]`);
+    const tdTitle = tr.querySelector('.todo-title');
+    const tdText = tr.querySelector('.todo-text');
+
+    tdTitle.textContent = title;
+    tdText.textContent = text;
 }
 
 /**
@@ -205,10 +229,22 @@ const set_to_edit_todo = id => {
 const change_view_for_edit = todo => {
     input_title.value = todo.title;
     input_text.value = todo.text;
-    form['btn'].textContent = 'Edit the task';
+    input_text.disabled = false;
+    form['btn'].textContent = 'Edit task';
+    const tr = document.querySelector(`tr[data-todo-id="${todo.id}"]`);
+    tr.querySelector('.edit-task').hidden = true;
+    tr.querySelector('.cancel-edit').classList.remove('d-none');
 }
 
-
+const reset_edit_todo = (id) => {
+    form.reset();
+    input_text.disabled = true;
+    const tr = document.querySelector(`tr[data-todo-id="${id}"]`);
+    tr.querySelector('.edit-task').hidden = false;
+    tr.querySelector('.cancel-edit').classList.add('d-none');
+    form['btn'].textContent = 'Add task';
+    storage.current_edit_task = {};
+}
 
 
 
